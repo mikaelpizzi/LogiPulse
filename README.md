@@ -1,194 +1,217 @@
 # LogiPulse
 
-LogiPulse is a local modern data stack pipeline built with DuckDB, dbt Core, Streamlit,
-and Python. It simulates last-mile deliveries, detects critical delays, validates data
-quality in CI, and triggers compensation webhooks (Reverse ETL).
+[![CI Pipeline](https://github.com/mikaelpizzi/LogiPulse/actions/workflows/dbt_ci.yml/badge.svg)](https://github.com/mikaelpizzi/LogiPulse/actions/workflows/dbt_ci.yml)
+![Python](https://img.shields.io/badge/Python-3.10-blue?logo=python)
+![dbt](https://img.shields.io/badge/dbt-1.8-orange?logo=dbt)
+![DuckDB](https://img.shields.io/badge/DuckDB-1.1.3-yellow)
+![Streamlit](https://img.shields.io/badge/Streamlit-1.32-red?logo=streamlit)
 
-This repository is fully local-first: no cloud accounts, no external databases, and
-no paid services. Everything runs on your machine.
+**LogiPulse** is a local Modern Data Stack pipeline that detects critical last-mile delivery
+delays and automatically triggers compensation coupons for affected users — all running
+100% on your machine, with no cloud accounts or paid services required.
 
-## Architecture summary
+---
 
-1) Ingestion (Python) generates deterministic events into DuckDB.
-2) Transformation (dbt) models data in three layers: staging, intermediate, marts.
-3) Analytics (Streamlit) reads the final mart table and shows KPIs and incident detail.
-4) Remediation (Reverse ETL) sends a coupon payload for delayed orders with idempotency.
+## How it works
+
+```
+Python simulator                      DuckDB (local file)
+generates 200 orders  ──────────────► raw_orders table
+with rush-hour delays
+                                              │
+                                    dbt Core (3 SQL layers)
+                                              │
+                                     stg_orders  (view)
+                                              │
+                                  int_delivery_perf  (view)
+                                     delay > 15 min?
+                                              │
+                                   fct_deliveries  (table)
+                                       ┌──────┴──────┐
+                               Streamlit            Reverse ETL
+                               dashboard            remediate.py
+                               KPIs + charts        coupon HTTP POST
+                                                    (idempotent)
+```
+
+**Four components in sequence:**
+
+1. **`scripts/main.py`** — Generates 200 deterministic delivery events and loads them into DuckDB. Simulates realistic rush-hour delay spikes (12–14h and 19–21h).
+2. **`dbt_project/`** — Three SQL transformation layers: cleans raw data → calculates `delay_minutes` and `is_severely_delayed` → materializes the final fact table.
+3. **`app.py`** — Streamlit dashboard with KPI cards, delay distribution histogram, and chronological scatter plot. Supports EN/ES and light/dark themes.
+4. **`scripts/remediate.py`** — Reverse ETL: queries `fct_deliveries`, generates a `DISCULPAXmin` coupon per delayed order, and sends an HTTP POST payload to a webhook endpoint. Uses a `sent_coupons` tracking table to guarantee idempotency.
+
+---
 
 ## Project layout
 
-- app.py: Streamlit operational dashboard with bilingual UI and light/dark modes.
-- scripts/main.py: deterministic data generator and ingestion.
-- scripts/remediate.py: reverse ETL remediation with idempotency tracking.
-- dbt_project/: dbt models, profiles, and tests.
-- .github/workflows/dbt_ci.yml: CI pipeline for dbt debug/run/test.
+```
+LogiPulse/
+├── .github/workflows/dbt_ci.yml   # CI: installs deps → generates data → dbt run/test
+├── dbt_project/
+│   ├── models/
+│   │   ├── staging/               # stg_orders.sql + schema.yml
+│   │   ├── intermediate/          # int_delivery_perf.sql
+│   │   └── marts/                 # fct_deliveries.sql + schema.yml
+│   ├── dbt_project.yml
+│   └── profiles.yml               # DuckDB connection (path: ../logipulse.duckdb)
+├── scripts/
+│   ├── main.py                    # Ingestion
+│   └── remediate.py               # Reverse ETL
+├── app.py                         # Streamlit dashboard
+└── requirements.txt
+```
 
-## Data contract (core fields)
+---
 
-Raw table: raw_orders
+## Data contract
 
-- order_id (varchar)
-- user_id (varchar)
-- driver_id (varchar)
-- status (varchar)
-- amount (double)
-- created_at (varchar, ISO 8601)
-- estimated_delivery_minutes (integer)
-- actual_delivery_minutes (integer, nullable)
+### Raw layer — `raw_orders`
 
-Mart table: fct_deliveries
+| Column | Type | Description |
+|---|---|---|
+| `order_id` | VARCHAR | Unique order identifier |
+| `user_id` | VARCHAR | Customer identifier |
+| `driver_id` | VARCHAR | Driver identifier |
+| `status` | VARCHAR | `CREATED`, `ASSIGNED`, `PICKED_UP`, `DELIVERED`, `CANCELLED` |
+| `amount` | DOUBLE | Transaction amount |
+| `created_at` | VARCHAR | ISO 8601 timestamp |
+| `estimated_delivery_minutes` | INTEGER | Promised delivery window |
+| `actual_delivery_minutes` | INTEGER | Actual delivery time (NULL if not delivered) |
 
-- order_id
-- user_id
-- driver_id
-- amount
-- created_at
-- delay_minutes
-- is_severely_delayed (true if delay_minutes > 15)
+### Mart layer — `fct_deliveries`
+
+| Column | Type | Description |
+|---|---|---|
+| `order_id` | VARCHAR | PK |
+| `user_id` | VARCHAR | |
+| `driver_id` | VARCHAR | |
+| `amount` | DOUBLE | |
+| `created_at` | TIMESTAMP | |
+| `delay_minutes` | INTEGER | `actual - estimated` |
+| `is_severely_delayed` | BOOLEAN | `TRUE` if `delay_minutes > 15` |
+
+---
 
 ## Local setup
 
-### Python version
+### Requirements
 
-Use Python 3.10. dbt 1.7/1.8 is not compatible with Python 3.13.
+- Python **3.10** (dbt-core 1.7/1.8 is not compatible with Python 3.12+)
+- Git
 
-### Create venv and install dependencies
+### Install
 
 ```bash
+# Create and activate the virtual environment
 python -m venv .venv
-```
 
-Windows PowerShell:
-
-```bash
+# Windows PowerShell
 .\.venv\Scripts\activate
-python -m pip install --upgrade pip
-pip install -r requirements.txt
-```
 
-macOS / Linux:
-
-```bash
+# macOS / Linux / WSL
 source .venv/bin/activate
-python -m pip install --upgrade pip
+
+# Install dependencies
+pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-WSL (Ubuntu or other Linux distros):
+---
 
-```bash
-source .venv/bin/activate
-python -m pip install --upgrade pip
-pip install -r requirements.txt
-```
+## Run the full pipeline
 
-## Run the pipeline (E2E)
+> **All commands are run from the project root unless otherwise noted.**
 
-1) Generate mock data:
+### Step 1 — Generate mock data
 
 ```bash
 python scripts/main.py
 ```
 
-2) Run dbt models and tests:
+Expected output: `Ingestion completed. Total rows in raw_orders: 200`
+
+### Step 2 — Run dbt transformations and tests
+
+> ⚠️ **Important:** dbt commands **must be run from inside `dbt_project/`**.
+> `profiles.yml` uses the relative path `../logipulse.duckdb` — running dbt from
+> the project root with `--project-dir` resolves this path incorrectly and will
+> cause a `Table raw_orders does not exist` error.
 
 ```bash
 cd dbt_project
-dbt debug --profiles-dir .
-dbt run --profiles-dir .
-dbt test --profiles-dir .
+dbt debug --profiles-dir .    # verify connection
+dbt run   --profiles-dir .    # build stg → int → fct
+dbt test  --profiles-dir .    # run 9 data quality tests
 cd ..
 ```
 
-3) Launch the dashboard:
+Expected output: `Done. PASS=3 WARN=0 ERROR=0 SKIP=0 TOTAL=3` and `Done. PASS=9 WARN=0 ERROR=0 SKIP=0 TOTAL=9`
+
+### Step 3 — Launch the dashboard
 
 ```bash
 streamlit run app.py
 ```
 
-WSL note: the dbt and Streamlit commands are the same in WSL.
+Opens at `http://localhost:8501`.
 
-## Reverse ETL (optional)
+### Step 4 — Run the Reverse ETL (optional)
 
-If LOGIPULSE_WEBHOOK_URL is not set, the script runs in simulation mode and prints
-payloads to the console.
-
-Windows PowerShell:
-
-```bash
-$env:LOGIPULSE_WEBHOOK_URL="https://webhook.site/your-id"
-python scripts/remediate.py
-```
-
-macOS / Linux:
-
-```bash
-export LOGIPULSE_WEBHOOK_URL="https://webhook.site/your-id"
-python scripts/remediate.py
-```
-
-WSL (Ubuntu or other Linux distros):
-
-```bash
-export LOGIPULSE_WEBHOOK_URL="https://webhook.site/your-id"
-python scripts/remediate.py
-```
-
-Idempotency: if you run the script again, it should not resend the same incidents.
-
-## Dashboard features
-
-- Bilingual UI (English and Espanol).
-- Light and dark theme toggle.
-- Filters for date window, delay range, and critical-only view.
-- KPI cards, delay distribution, and delay trend charts.
-
-## Demo script (5 minutes)
-
-Run this sequence from the project root to demonstrate the full flow:
-
-```bash
-python scripts/main.py
-cd dbt_project
-dbt run --profiles-dir .
-dbt test --profiles-dir .
-cd ..
-streamlit run app.py
-```
-
-Optional remediation demo (simulation mode):
+Without a webhook URL the script runs in **simulation mode** and prints payloads to the console:
 
 ```bash
 python scripts/remediate.py
 ```
 
-WSL note: use the same commands as macOS/Linux in WSL.
+To send real HTTP POST requests, set the webhook URL first:
+
+```bash
+# Windows PowerShell
+$env:LOGIPULSE_WEBHOOK_URL="https://webhook.site/your-unique-id"
+python scripts/remediate.py
+
+# macOS / Linux / WSL
+export LOGIPULSE_WEBHOOK_URL="https://webhook.site/your-unique-id"
+python scripts/remediate.py
+```
+
+**Idempotency check:** running the script a second time prints `No new incidents found for remediation.` — no coupon is sent twice.
+
+---
 
 ## CI pipeline
 
-The GitHub Actions workflow runs on push and pull requests to main:
+The GitHub Actions workflow (`.github/workflows/dbt_ci.yml`) triggers on every push and
+pull request to `main`. It:
 
-1) Install Python dependencies.
-2) Generate a local DuckDB database with mock data.
-3) Run dbt debug, run, and test.
+1. Sets up Python 3.10 on `ubuntu-latest`
+2. Installs all Python dependencies
+3. Runs `scripts/main.py` to generate a fresh DuckDB database
+4. Runs `dbt debug`, `dbt run`, and `dbt test` from inside `dbt_project/`
 
-File: .github/workflows/dbt_ci.yml
+A green badge at the top of this file confirms the pipeline is passing.
+
+---
+
+## Dashboard features
+
+- **KPI cards:** completed deliveries, critical delays, delay rate, average delay
+- **Delay distribution:** histogram with a dashed threshold line at 15 minutes
+- **Delay trend:** scatter plot by order time, colored by severity
+- **Incident table:** filterable list of critical orders for remediation
+- **Filters:** date window, delay range slider, critical-only toggle
+- **Bilingual UI:** English / Español
+- **Themes:** light and dark mode
+
+---
 
 ## Troubleshooting
 
-- If pip install hangs, confirm Python 3.10 is active: python --version.
-- If dbt cannot find profiles, run dbt with --profiles-dir . inside dbt_project.
-- If the dashboard shows no data, rerun scripts/main.py and dbt run.
-- If remediation sends duplicates, delete main.sent_coupons or check the join logic.
-
-## Commit workflow
-
-Use frequent, atomic commits. Recommended stages:
-
-- env setup and requirements
-- ingestion script
-- dbt configuration
-- staging model
-- intermediate and mart models
-- dbt tests
-- dashboard
-- remediation
+| Problem | Fix |
+|---|---|
+| `Table raw_orders does not exist` in dbt | Run `dbt run` from **inside** `dbt_project/`, not the project root |
+| `pip install` hangs | Confirm Python 3.10 is active: `python --version` |
+| Dashboard shows no data | Rerun `scripts/main.py` and `dbt run` |
+| Remediation resends coupons | The `sent_coupons` table may be out of sync; inspect it with `duckdb logipulse.duckdb` |
+| dbt cannot find `profiles.yml` | Always pass `--profiles-dir .` when running from inside `dbt_project/` |
