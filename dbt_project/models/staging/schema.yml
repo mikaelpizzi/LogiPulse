@@ -1,0 +1,23 @@
+version: 2
+
+sources:
+  - name: raw_logipulse
+    schema: main
+    tables:
+      - name: raw_orders
+
+models:
+  - name: stg_orders
+    description: "Cleaned staging layer for raw delivery orders."
+    columns:
+      - name: order_id
+        tests:
+          - unique
+          - not_null
+      - name: status
+        tests:
+          - accepted_values:
+              values: ["CREATED", "ASSIGNED", "PICKED_UP", "DELIVERED", "CANCELLED"]
+      - name: created_at
+        tests:
+          - not_null

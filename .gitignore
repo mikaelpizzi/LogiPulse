@@ -136,6 +136,14 @@ ENV/
 env.bak/
 venv.bak/
 
+# Local data warehouse and dbt artifacts
+*.duckdb
+*.duckdb.wal
+dbt_project/target/
+dbt_project/dbt_packages/
+dbt_project/logs/
+logipulse.duckdb
+
 # Spyder project settings
 .spyderproject
 .spyproject

@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: fct_deliveries
+    description: "Final fact table for delivery performance analysis."
+    columns:
+      - name: order_id
+        tests:
+          - unique
+          - not_null
+      - name: user_id
+        tests:
+          - not_null
+      - name: is_severely_delayed
+        tests:
+          - not_null
+          - accepted_values:
+              values: [true, false]

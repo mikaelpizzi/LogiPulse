@@ -1,0 +1,8 @@
+logipulse_profile:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "../logipulse.duckdb"
+      schema: main
+      threads: 4
