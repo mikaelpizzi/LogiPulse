@@ -14,6 +14,226 @@ st.set_page_config(
     layout="wide",
 )
 
+TRANSLATIONS = {
+    "en": {
+        "hero_title": "LogiPulse Operations Center",
+        "hero_subtitle": "Live visibility into last-mile performance and critical delay remediation.",
+        "hero_timestamp": "Last delivery timestamp",
+        "filters_title": "Filters",
+        "filters_date": "Delivery window",
+        "filters_delay": "Delay minutes range",
+        "filters_critical": "Only critical delays",
+        "kpi_completed": "Completed deliveries",
+        "kpi_completed_note": "Filtered window",
+        "kpi_critical": "Critical delays",
+        "kpi_critical_note": "> 15 minutes",
+        "kpi_rate": "Critical delay rate",
+        "kpi_rate_note": "Share of delivered orders",
+        "kpi_avg": "Average delay",
+        "kpi_avg_note": "Delayed orders only",
+        "section_distribution": "Delay Distribution",
+        "section_trend": "Delay Trend",
+        "section_remediation": "Orders requiring remediation",
+        "table_empty": "No critical delays were found in the current mart data.",
+        "error_db": "Database file '{db_path}' was not found. Run 'python scripts/main.py' and 'dbt run' first.",
+        "error_table": "Unable to read 'main.fct_deliveries': {error}",
+        "error_empty": "The mart table is empty. Run the ingestion and dbt pipeline first.",
+        "theme_label": "Theme",
+        "language_label": "Language",
+        "theme_light": "Light",
+        "theme_dark": "Dark",
+    },
+    "es": {
+        "hero_title": "Centro Operativo LogiPulse",
+        "hero_subtitle": "Visibilidad en vivo del rendimiento de última milla y remediación de demoras críticas.",
+        "hero_timestamp": "Última entrega registrada",
+        "filters_title": "Filtros",
+        "filters_date": "Ventana de entregas",
+        "filters_delay": "Rango de minutos de demora",
+        "filters_critical": "Solo demoras críticas",
+        "kpi_completed": "Entregas completadas",
+        "kpi_completed_note": "Ventana filtrada",
+        "kpi_critical": "Demoras críticas",
+        "kpi_critical_note": "> 15 minutos",
+        "kpi_rate": "Tasa de demora crítica",
+        "kpi_rate_note": "Proporción sobre entregas",
+        "kpi_avg": "Demora promedio",
+        "kpi_avg_note": "Solo pedidos con demora",
+        "section_distribution": "Distribución de demoras",
+        "section_trend": "Tendencia de demoras",
+        "section_remediation": "Pedidos que requieren remediación",
+        "table_empty": "No hay demoras críticas en los datos actuales.",
+        "error_db": "No se encontró la base de datos '{db_path}'. Ejecuta 'python scripts/main.py' y 'dbt run' primero.",
+        "error_table": "No se pudo leer 'main.fct_deliveries': {error}",
+        "error_empty": "La tabla mart está vacía. Ejecuta la ingesta y dbt primero.",
+        "theme_label": "Tema",
+        "language_label": "Idioma",
+        "theme_light": "Claro",
+        "theme_dark": "Oscuro",
+    },
+}
+
+with st.sidebar:
+    language = st.selectbox(
+        TRANSLATIONS["en"]["language_label"],
+        options=["en", "es"],
+        format_func=lambda code: "English" if code == "en" else "Espanol",
+    )
+    theme_choice = st.selectbox(
+        TRANSLATIONS[language]["theme_label"],
+        options=["light", "dark"],
+        format_func=lambda value: TRANSLATIONS[language]["theme_light"]
+        if value == "light"
+        else TRANSLATIONS[language]["theme_dark"],
+    )
+
+t = TRANSLATIONS[language]
+
+if theme_choice == "dark":
+    theme_css = """
+    :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --accent: #5eead4;
+        --accent-soft: #134e4a;
+        --danger: #fca5a5;
+        --danger-soft: #7f1d1d;
+        --panel: #0f172a;
+        --surface: #0b1120;
+        --shadow: rgba(15, 23, 42, 0.5);
+    }
+
+    .stApp {
+        background: radial-gradient(circle at 20% 20%, #0f172a 0%, #020617 70%);
+    }
+
+    .hero {
+        background: linear-gradient(120deg, #0f172a 0%, #134e4a 55%, #0f766e 100%);
+    }
+
+    .kpi-card {
+        border: 1px solid #1e293b;
+    }
+    """
+else:
+    theme_css = """
+    :root {
+        --ink: #0f172a;
+        --muted: #64748b;
+        --accent: #0f766e;
+        --accent-soft: #99f6e4;
+        --danger: #b91c1c;
+        --danger-soft: #fecaca;
+        --panel: #ffffff;
+        --surface: #f8fafc;
+        --shadow: rgba(15, 23, 42, 0.08);
+    }
+
+    .stApp {
+        background: radial-gradient(circle at 10% 20%, #ecfeff 0%, #f8fafc 35%, #ffffff 100%);
+    }
+    """
+
+st.markdown(
+    f"""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+    {theme_css}
+
+    html, body, [class*="css"]  {{
+        font-family: 'Space Grotesk', sans-serif;
+    }}
+
+    .hero {{
+        padding: 24px 28px;
+        border-radius: 20px;
+        color: white;
+        box-shadow: 0 18px 30px var(--shadow);
+        margin-bottom: 18px;
+        animation: hero-slide 0.8s ease-out;
+    }}
+
+    .hero h1 {{
+        font-size: 2.1rem;
+        margin: 0 0 6px 0;
+    }}
+
+    .hero p {{
+        margin: 0;
+        color: #ecfeff;
+    }}
+
+    .kpi-grid {{
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        margin-bottom: 8px;
+    }}
+
+    .kpi-card {{
+        padding: 16px 18px;
+        border-radius: 16px;
+        background: var(--panel);
+        box-shadow: 0 10px 18px var(--shadow);
+        animation: fade-up 0.8s ease-out;
+    }}
+
+    .kpi-label {{
+        font-size: 0.85rem;
+        color: var(--muted);
+        margin-bottom: 6px;
+    }}
+
+    .kpi-value {{
+        font-size: 1.6rem;
+        font-weight: 600;
+        color: var(--ink);
+    }}
+
+    .kpi-note {{
+        font-size: 0.8rem;
+        color: var(--muted);
+        margin-top: 4px;
+    }}
+
+    .section-title {{
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--ink);
+    }}
+
+    .stDataFrame {{
+        background: var(--panel);
+        border-radius: 12px;
+    }}
+
+    @keyframes hero-slide {{
+        from {{ opacity: 0; transform: translateY(16px); }}
+        to {{ opacity: 1; transform: translateY(0); }}
+    }}
+
+    @keyframes fade-up {{
+        from {{ opacity: 0; transform: translateY(8px); }}
+        to {{ opacity: 1; transform: translateY(0); }}
+    }}
+
+    @media (max-width: 1100px) {{
+        .kpi-grid {{
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }}
+    }}
+
+    @media (max-width: 640px) {{
+        .kpi-grid {{
+            grid-template-columns: 1fr;
+        }}
+    }}
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 
 def load_data():
     """Load the final mart from DuckDB."""
@@ -25,56 +245,126 @@ def load_data():
 
 
 if not os.path.exists(DB_PATH):
-    st.error(
-        f"Database file '{DB_PATH}' was not found. Run 'python scripts/main.py' and 'dbt run' first."
-    )
+    st.error(t["error_db"].format(db_path=DB_PATH))
     st.stop()
 
 try:
     df = load_data()
 except Exception as exc:
-    st.error(f"Unable to read 'main.fct_deliveries': {exc}")
+    st.error(t["error_table"].format(error=exc))
     st.stop()
 
 if df.empty:
-    st.warning("The mart table is empty. Run the ingestion and dbt pipeline first.")
+    st.warning(t["error_empty"])
     st.stop()
 
 df["created_at"] = pd.to_datetime(df["created_at"])
 
-st.title("LogiPulse: Operational Dashboard")
+last_refresh = df["created_at"].max()
+
 st.markdown(
-    "Operational analysis and automated remediation of critical last-mile delivery delays."
+    f"""
+    <div class="hero">
+        <h1>{t["hero_title"]}</h1>
+        <p>{t["hero_subtitle"]}</p>
+        <p style="margin-top:8px; font-size:0.9rem;">{t["hero_timestamp"]}: {last_refresh:%Y-%m-%d %H:%M}</p>
+    </div>
+    """,
+    unsafe_allow_html=True,
 )
-st.divider()
 
-total_deliveries = len(df)
-delayed_deliveries = int(df["is_severely_delayed"].sum())
-delay_rate = (delayed_deliveries / total_deliveries) * 100 if total_deliveries else 0
-avg_delay = df.loc[df["delay_minutes"] > 0, "delay_minutes"].mean()
-
-col1, col2, col3, col4 = st.columns(4)
-
-with col1:
-    st.metric("Total completed deliveries", f"{total_deliveries:,}")
-with col2:
-    st.metric("Critical delays", f"{delayed_deliveries:,}", delta_color="inverse")
-with col3:
-    st.metric("Critical delay rate", f"{delay_rate:.1f}%")
-with col4:
-    st.metric(
-        "Average delay among delayed orders",
-        f"{avg_delay:.1f} min" if pd.notna(avg_delay) else "0 min",
+with st.sidebar:
+    st.markdown(f"## {t['filters_title']}")
+    date_min = df["created_at"].min().date()
+    date_max = df["created_at"].max().date()
+    date_range = st.date_input(
+        t["filters_date"],
+        value=(date_min, date_max),
+        min_value=date_min,
+        max_value=date_max,
     )
+    min_delay, max_delay = int(df["delay_minutes"].min()), int(df["delay_minutes"].max())
+    delay_range = st.slider(
+        t["filters_delay"],
+        min_value=min_delay,
+        max_value=max_delay,
+        value=(min_delay, max_delay),
+    )
+    show_critical_only = st.toggle(t["filters_critical"], value=False)
+
+filtered_df = df.copy()
+if isinstance(date_range, tuple) and len(date_range) == 2:
+    start_date, end_date = date_range
+    filtered_df = filtered_df[
+        (filtered_df["created_at"].dt.date >= start_date)
+        & (filtered_df["created_at"].dt.date <= end_date)
+    ]
+
+filtered_df = filtered_df[
+    (filtered_df["delay_minutes"] >= delay_range[0])
+    & (filtered_df["delay_minutes"] <= delay_range[1])
+]
+
+if show_critical_only:
+    filtered_df = filtered_df[filtered_df["is_severely_delayed"]]
+
+total_deliveries = len(filtered_df)
+delayed_deliveries = int(filtered_df["is_severely_delayed"].sum())
+delay_rate = (delayed_deliveries / total_deliveries) * 100 if total_deliveries else 0
+avg_delay = filtered_df.loc[filtered_df["delay_minutes"] > 0, "delay_minutes"].mean()
+
+st.markdown(
+    """
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-label">{kpi_completed}</div>
+            <div class="kpi-value">{total_deliveries}</div>
+            <div class="kpi-note">{kpi_completed_note}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">{kpi_critical}</div>
+            <div class="kpi-value" style="color: var(--danger);">{delayed_deliveries}</div>
+            <div class="kpi-note">{kpi_critical_note}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">{kpi_rate}</div>
+            <div class="kpi-value">{delay_rate:.1f}%</div>
+            <div class="kpi-note">{kpi_rate_note}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">{kpi_avg}</div>
+            <div class="kpi-value">{avg_delay:.1f} min</div>
+            <div class="kpi-note">{kpi_avg_note}</div>
+        </div>
+    </div>
+    """.format(
+        total_deliveries=f"{total_deliveries:,}",
+        delayed_deliveries=f"{delayed_deliveries:,}",
+        delay_rate=delay_rate,
+        avg_delay=avg_delay if pd.notna(avg_delay) else 0,
+        kpi_completed=t["kpi_completed"],
+        kpi_completed_note=t["kpi_completed_note"],
+        kpi_critical=t["kpi_critical"],
+        kpi_critical_note=t["kpi_critical_note"],
+        kpi_rate=t["kpi_rate"],
+        kpi_rate_note=t["kpi_rate_note"],
+        kpi_avg=t["kpi_avg"],
+        kpi_avg_note=t["kpi_avg_note"],
+    ),
+    unsafe_allow_html=True,
+)
 
 st.divider()
 
 left_col, right_col = st.columns(2)
 
 with left_col:
-    st.subheader("Delay Distribution")
+    st.markdown(
+        f"<div class=\"section-title\">{t['section_distribution']}</div>",
+        unsafe_allow_html=True,
+    )
     fig_hist = px.histogram(
-        df,
+        filtered_df,
         x="delay_minutes",
         color="is_severely_delayed",
         nbins=30,
@@ -84,12 +374,21 @@ with left_col:
         title="Orders by delay minutes",
     )
     fig_hist.add_vline(x=15, line_dash="dash", line_color="red")
+    fig_hist.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(family="Space Grotesk", color="#0f172a"),
+        title_font_size=14,
+    )
     st.plotly_chart(fig_hist, use_container_width=True)
 
 with right_col:
-    st.subheader("Delay Trend")
+    st.markdown(
+        f"<div class=\"section-title\">{t['section_trend']}</div>",
+        unsafe_allow_html=True,
+    )
     fig_scatter = px.scatter(
-        df,
+        filtered_df,
         x="created_at",
         y="delay_minutes",
         color="is_severely_delayed",
@@ -99,18 +398,31 @@ with right_col:
         hover_data=["order_id", "user_id", "driver_id"],
     )
     fig_scatter.add_hline(y=15, line_dash="dash", line_color="red")
+    fig_scatter.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(family="Space Grotesk", color="#0f172a"),
+        title_font_size=14,
+    )
     st.plotly_chart(fig_scatter, use_container_width=True)
 
 st.divider()
-st.subheader("Orders requiring remediation")
+st.markdown(
+    f"<div class=\"section-title\">{t['section_remediation']}</div>",
+    unsafe_allow_html=True,
+)
 
-delayed_df = df[df["is_severely_delayed"]].sort_values(by="delay_minutes", ascending=False)
+delayed_df = filtered_df[filtered_df["is_severely_delayed"]].sort_values(
+    by="delay_minutes", ascending=False
+)
 
 if delayed_df.empty:
-    st.info("No critical delays were found in the current mart data.")
+    st.info(t["table_empty"])
 else:
     st.dataframe(
-        delayed_df[["order_id", "user_id", "driver_id", "amount", "created_at", "delay_minutes"]],
+        delayed_df[
+            ["order_id", "user_id", "driver_id", "amount", "created_at", "delay_minutes"]
+        ],
         use_container_width=True,
         hide_index=True,
     )

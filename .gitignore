@@ -135,6 +135,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.user.yml
 
 # Local data warehouse and dbt artifacts
 *.duckdb
