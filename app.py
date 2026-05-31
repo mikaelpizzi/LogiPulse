@@ -3,6 +3,7 @@ import os
 import duckdb
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import streamlit as st
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -42,6 +43,24 @@ TRANSLATIONS = {
         "language_label": "Language",
         "theme_light": "Light",
         "theme_dark": "Dark",
+        # ── Phase 2: new analytics panels ──────────────────────────────────
+        "section_hourly": "Hourly Delay Pattern",
+        "section_hourly_sub": "Critical delays by hour of day. Rush hours (12\u201314h and 19\u201321h) highlighted in amber.",
+        "section_drivers": "Driver Performance Ranking",
+        "section_drivers_sub": "Top 5 drivers with the highest volume of critical delays.",
+        "section_remediation_status": "Remediation Status",
+        "section_remediation_sub": "Coupon compensation pipeline \u2014 critical incidents vs remediated orders.",
+        "remediation_total": "Critical incidents",
+        "remediation_sent": "Coupons sent",
+        "remediation_pending": "Pending remediation",
+        "remediation_progress": "Remediation progress",
+        "remediation_no_coupons": "No coupons sent yet. Run: python scripts/remediate.py",
+        "rush_hour_label": "Rush hour",
+        "driver_col_id": "Driver",
+        "driver_col_deliveries": "Total deliveries",
+        "driver_col_critical": "Critical delays",
+        "driver_col_rate": "Critical rate (%)",
+        "driver_col_avg_delay": "Avg delay (min)",
     },
     "es": {
         "hero_title": "Centro Operativo LogiPulse",
@@ -70,6 +89,24 @@ TRANSLATIONS = {
         "language_label": "Idioma",
         "theme_light": "Claro",
         "theme_dark": "Oscuro",
+        # ── Fase 2: nuevos paneles analíticos ──────────────────────────────
+        "section_hourly": "Patr\u00f3n de Demoras por Hora",
+        "section_hourly_sub": "Demoras cr\u00edticas por hora del d\u00eda. Horas pico (12\u201314h y 19\u201321h) destacadas en \u00e1mbar.",
+        "section_drivers": "Ranking de Rendimiento de Motoristas",
+        "section_drivers_sub": "Top 5 motoristas con mayor volumen de demoras cr\u00edticas.",
+        "section_remediation_status": "Estado de Remediaci\u00f3n",
+        "section_remediation_sub": "Pipeline de compensaci\u00f3n \u2014 incidencias cr\u00edticas vs \u00f3rdenes remediadas.",
+        "remediation_total": "Incidencias cr\u00edticas",
+        "remediation_sent": "Cupones enviados",
+        "remediation_pending": "Pendientes de remediaci\u00f3n",
+        "remediation_progress": "Progreso de remediaci\u00f3n",
+        "remediation_no_coupons": "No se han enviado cupones a\u00fan. Ejecuta: python scripts/remediate.py",
+        "rush_hour_label": "Hora pico",
+        "driver_col_id": "Motorista",
+        "driver_col_deliveries": "Entregas totales",
+        "driver_col_critical": "Demoras cr\u00edticas",
+        "driver_col_rate": "Tasa cr\u00edtica (%)",
+        "driver_col_avg_delay": "Demora promedio (min)",
     },
 }
 
@@ -240,6 +277,71 @@ def load_data():
     conn = duckdb.connect(DB_PATH)
     try:
         return conn.execute("SELECT * FROM main.fct_deliveries").fetchdf()
+    finally:
+        conn.close()
+
+
+def load_hourly_data():
+    """Load delivery counts grouped by hour of day for pattern analysis."""
+    conn = duckdb.connect(DB_PATH)
+    try:
+        return conn.execute("""
+            SELECT
+                CAST(EXTRACT(HOUR FROM created_at) AS INTEGER) AS hour,
+                COUNT(*) AS total_orders,
+                SUM(CASE WHEN is_severely_delayed THEN 1 ELSE 0 END) AS critical_count,
+                ROUND(AVG(delay_minutes), 1) AS avg_delay
+            FROM main.fct_deliveries
+            GROUP BY 1
+            ORDER BY 1
+        """).fetchdf()
+    finally:
+        conn.close()
+
+
+def load_driver_data():
+    """Load top-5 drivers ranked by critical delay volume."""
+    conn = duckdb.connect(DB_PATH)
+    try:
+        return conn.execute("""
+            SELECT
+                driver_id,
+                COUNT(*) AS total_deliveries,
+                SUM(CASE WHEN is_severely_delayed THEN 1 ELSE 0 END) AS critical_delays,
+                ROUND(
+                    SUM(CASE WHEN is_severely_delayed THEN 1 ELSE 0 END) * 100.0 / COUNT(*),
+                    1
+                ) AS critical_rate,
+                ROUND(AVG(delay_minutes), 1) AS avg_delay
+            FROM main.fct_deliveries
+            GROUP BY driver_id
+            HAVING COUNT(*) >= 2
+            ORDER BY critical_delays DESC, critical_rate DESC
+            LIMIT 5
+        """).fetchdf()
+    finally:
+        conn.close()
+
+
+def load_remediation_data():
+    """Load sent coupons joined with fct_deliveries for remediation tracking."""
+    conn = duckdb.connect(DB_PATH)
+    try:
+        tables = [r[0] for r in conn.execute("SHOW TABLES").fetchall()]
+        if "sent_coupons" not in tables:
+            return pd.DataFrame()
+        return conn.execute("""
+            SELECT
+                c.order_id,
+                d.user_id,
+                d.driver_id,
+                d.delay_minutes,
+                c.coupon_code,
+                c.sent_at
+            FROM main.sent_coupons c
+            INNER JOIN main.fct_deliveries d ON c.order_id = d.order_id
+            ORDER BY d.delay_minutes DESC
+        """).fetchdf()
     finally:
         conn.close()
 
