@@ -1,5 +1,5 @@
 import os
-
+import subprocess
 import duckdb
 import pandas as pd
 import plotly.express as px
@@ -393,6 +393,16 @@ with st.sidebar:
         value=(min_delay, max_delay),
     )
     show_critical_only = st.toggle(t["filters_critical"], value=False)
+    
+    st.divider()
+    if st.button("Simular nuevo lote" if language == "es" else "Simulate new batch", use_container_width=True, type="primary"):
+        with st.spinner("Generando datos..." if language == "es" else "Generating data..."):
+            subprocess.run(["python", "scripts/main.py", "--random-seed"], check=True)
+        with st.spinner("Ejecutando dbt run..." if language == "es" else "Running dbt..."):
+            # Use shell=True to easily pick up the venv's dbt.exe on Windows
+            subprocess.run(["dbt", "run", "--profiles-dir", "."], cwd="dbt_project", check=True, shell=True)
+        st.cache_data.clear()
+        st.rerun()
 
 filtered_df = df.copy()
 if isinstance(date_range, tuple) and len(date_range) == 2:

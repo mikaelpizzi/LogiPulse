@@ -1,5 +1,7 @@
+import argparse
 import os
 import random
+import time
 from datetime import datetime, timedelta
 
 import duckdb
@@ -83,13 +85,13 @@ def generate_mock_events(num_orders=200, seed=RANDOM_SEED):
     return orders
 
 
-def ingest_data():
+def ingest_data(seed=RANDOM_SEED):
     """Generate the mock dataset and load it into DuckDB."""
     init_database()
     conn = duckdb.connect(DB_PATH)
 
     conn.execute("DELETE FROM raw_orders")
-    orders = generate_mock_events(200)
+    orders = generate_mock_events(200, seed=seed)
 
     print(f"Inserting {len(orders)} simulated orders into raw_orders...")
     conn.executemany(
@@ -107,4 +109,9 @@ def ingest_data():
 
 
 if __name__ == "__main__":
-    ingest_data()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--random-seed", action="store_true", help="Use current time as seed")
+    args = parser.parse_args()
+    
+    seed = int(time.time()) if args.random_seed else RANDOM_SEED
+    ingest_data(seed=seed)
