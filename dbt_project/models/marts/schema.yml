@@ -5,14 +5,14 @@ models:
     description: "Final fact table for delivery performance analysis."
     columns:
       - name: order_id
-        tests:
+        data_tests:
           - unique
           - not_null
       - name: user_id
-        tests:
+        data_tests:
           - not_null
       - name: is_severely_delayed
-        tests:
+        data_tests:
           - not_null
           - accepted_values:
               values: [true, false]

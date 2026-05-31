@@ -11,13 +11,13 @@ models:
     description: "Cleaned staging layer for raw delivery orders."
     columns:
       - name: order_id
-        tests:
+        data_tests:
           - unique
           - not_null
       - name: status
-        tests:
+        data_tests:
           - accepted_values:
               values: ["CREATED", "ASSIGNED", "PICKED_UP", "DELIVERED", "CANCELLED"]
       - name: created_at
-        tests:
+        data_tests:
           - not_null

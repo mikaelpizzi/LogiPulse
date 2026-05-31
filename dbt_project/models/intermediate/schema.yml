@@ -1,0 +1,55 @@
+version: 2
+
+models:
+  - name: int_delivery_perf
+    description: >
+      Intermediate model that applies business logic on top of stg_orders.
+      Filters to successfully delivered orders only and computes the delay
+      in minutes between the actual and estimated delivery times. Also flags
+      orders where the delay exceeds the critical threshold of 15 minutes.
+    columns:
+      - name: order_id
+        description: "Primary key inherited from stg_orders."
+        data_tests:
+          - unique
+          - not_null
+      - name: user_id
+        description: "Customer identifier."
+        data_tests:
+          - not_null
+      - name: driver_id
+        description: "Driver identifier."
+        data_tests:
+          - not_null
+      - name: status
+        description: "Always 'DELIVERED' at this layer (filtered in WHERE clause)."
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ["DELIVERED"]
+      - name: amount
+        description: "Transaction amount in local currency."
+        data_tests:
+          - not_null
+      - name: created_at
+        description: "Order creation timestamp (cast from ISO 8601 string)."
+        data_tests:
+          - not_null
+      - name: estimated_delivery_minutes
+        description: "Delivery window promised to the customer at order creation."
+        data_tests:
+          - not_null
+      - name: actual_delivery_minutes
+        description: "Actual time taken to deliver the order. Never NULL at this layer."
+        data_tests:
+          - not_null
+      - name: delay_minutes
+        description: "actual_delivery_minutes minus estimated_delivery_minutes. Negative means early delivery."
+        data_tests:
+          - not_null
+      - name: is_severely_delayed
+        description: "TRUE when delay_minutes > 15. Drives coupon remediation logic."
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [true, false]
