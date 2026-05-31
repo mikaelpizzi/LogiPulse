@@ -589,3 +589,58 @@ if not df_hourly.empty:
         margin=dict(t=40, b=10),
     )
     st.plotly_chart(fig_hourly, use_container_width=True)
+
+# ── DRIVER PERFORMANCE RANKING (RF-07b) ───────────────────────────────────────
+st.divider()
+st.markdown(
+    f'<div class="section-title">{t["section_drivers"]}</div>',
+    unsafe_allow_html=True,
+)
+st.caption(t["section_drivers_sub"])
+
+df_drivers = load_driver_data()
+
+if not df_drivers.empty:
+    chart_col, table_col = st.columns([3, 2])
+
+    with chart_col:
+        fig_drivers = px.bar(
+            df_drivers,
+            x="critical_rate",
+            y="driver_id",
+            orientation="h",
+            color="critical_rate",
+            color_continuous_scale=["#10b981", "#f59e0b", "#ef4444"],
+            range_color=[0, 100],
+            labels={
+                "critical_rate": t["driver_col_rate"],
+                "driver_id": t["driver_col_id"],
+            },
+            text="critical_rate",
+        )
+        fig_drivers.update_traces(
+            texttemplate="%{text}%",
+            textposition="outside",
+        )
+        fig_drivers.update_layout(
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font=dict(family="Space Grotesk"),
+            coloraxis_showscale=False,
+            yaxis=dict(autorange="reversed"),
+            xaxis=dict(range=[0, 110], title=t["driver_col_rate"]),
+            margin=dict(t=10, r=70, b=10),
+        )
+        st.plotly_chart(fig_drivers, use_container_width=True)
+
+    with table_col:
+        display_df = df_drivers.rename(
+            columns={
+                "driver_id": t["driver_col_id"],
+                "total_deliveries": t["driver_col_deliveries"],
+                "critical_delays": t["driver_col_critical"],
+                "critical_rate": t["driver_col_rate"],
+                "avg_delay": t["driver_col_avg_delay"],
+            }
+        )
+        st.dataframe(display_df, use_container_width=True, hide_index=True)
