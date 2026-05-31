@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+import time
 import duckdb
 import pandas as pd
 import plotly.express as px
@@ -273,9 +274,23 @@ st.markdown(
 )
 
 
+def get_duckdb_conn(retries=20, delay=0.5):
+    """Safely connect to DuckDB, retrying if the database is locked by dbt."""
+    for i in range(retries):
+        try:
+            return duckdb.connect(DB_PATH, read_only=True)
+        except Exception as e:
+            if "lock" in str(e).lower() or "io" in str(e).lower():
+                if i == retries - 1:
+                    raise
+                time.sleep(delay)
+            else:
+                raise
+
+@st.cache_data(ttl=60)
 def load_data():
     """Load the final mart from DuckDB."""
-    conn = duckdb.connect(DB_PATH)
+    conn = get_duckdb_conn()
     try:
         return conn.execute("SELECT * FROM main.fct_deliveries").fetchdf()
     finally:
@@ -284,7 +299,7 @@ def load_data():
 
 def load_hourly_data():
     """Load delivery counts grouped by hour of day for pattern analysis."""
-    conn = duckdb.connect(DB_PATH)
+    conn = get_duckdb_conn()
     try:
         return conn.execute("""
             SELECT
@@ -302,7 +317,7 @@ def load_hourly_data():
 
 def load_driver_data():
     """Load top-5 drivers ranked by critical delay volume."""
-    conn = duckdb.connect(DB_PATH)
+    conn = get_duckdb_conn()
     try:
         return conn.execute("""
             SELECT
@@ -326,7 +341,7 @@ def load_driver_data():
 
 def load_remediation_data():
     """Load sent coupons joined with fct_deliveries for remediation tracking."""
-    conn = duckdb.connect(DB_PATH)
+    conn = get_duckdb_conn()
     try:
         tables = [r[0] for r in conn.execute("SHOW TABLES").fetchall()]
         if "sent_coupons" not in tables:
@@ -680,7 +695,7 @@ st.markdown(
 st.caption(t["section_remediation_sub"])
 
 df_remediation = load_remediation_data()
-conn = duckdb.connect(DB_PATH)
+conn = get_duckdb_conn()
 try:
     total_critical = conn.execute("SELECT COUNT(*) FROM main.fct_deliveries WHERE is_severely_delayed").fetchone()[0]
 finally:
