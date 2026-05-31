@@ -35,6 +35,14 @@ models:
         description: "Order creation timestamp (cast from ISO 8601 string)."
         data_tests:
           - not_null
+      - name: zone
+        description: "Geographic delivery zone."
+        data_tests:
+          - not_null
+      - name: category
+        description: "Order category (e.g., Food, Pharmacy)."
+        data_tests:
+          - not_null
       - name: estimated_delivery_minutes
         description: "Delivery window promised to the customer at order creation."
         data_tests:

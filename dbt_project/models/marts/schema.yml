@@ -16,3 +16,11 @@ models:
           - not_null
           - accepted_values:
               values: [true, false]
+      - name: zone
+        description: "Geographic delivery zone."
+        data_tests:
+          - not_null
+      - name: category
+        description: "Order category (e.g., Food, Pharmacy)."
+        data_tests:
+          - not_null

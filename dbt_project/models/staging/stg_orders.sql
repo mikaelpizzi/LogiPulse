@@ -19,6 +19,8 @@ select
     driver_id,
     status,
     amount,
+    zone,
+    category,
     cast(created_at as timestamp) as created_at,
     estimated_delivery_minutes,
     actual_delivery_minutes

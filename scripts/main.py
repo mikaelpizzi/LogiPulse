@@ -25,6 +25,8 @@ def init_database():
             driver_id VARCHAR,
             status VARCHAR,
             amount DOUBLE,
+            zone VARCHAR,
+            category VARCHAR,
             created_at VARCHAR,
             estimated_delivery_minutes INTEGER,
             actual_delivery_minutes INTEGER
@@ -48,6 +50,8 @@ def generate_mock_events(num_orders=200, seed=RANDOM_SEED):
         "ASSIGNED",
         "PICKED_UP",
     ]
+    zones = ["Centro", "Norte", "Sur", "Este", "Oeste"]
+    categories = ["Food", "Pharmacy", "Groceries"]
 
     for index in range(num_orders):
         order_id = f"ord_{index + 1:06d}"
@@ -55,8 +59,11 @@ def generate_mock_events(num_orders=200, seed=RANDOM_SEED):
         driver_id = f"drv_{rng.randint(10, 99)}"
         status = rng.choice(statuses)
         amount = round(rng.uniform(8.0, 55.0), 2)
+        zone = rng.choice(zones)
+        category = rng.choice(categories)
 
-        order_time = BASE_TIME + timedelta(minutes=index * 15 + rng.randint(0, 20))
+        # Distribute over 3 days (4320 minutes)
+        order_time = BASE_TIME + timedelta(minutes=rng.randint(0, 4320))
         hour = order_time.hour
         is_rush_hour = (12 <= hour <= 14) or (19 <= hour <= 21)
         estimated_delivery = rng.choice([20, 30, 40, 45])
@@ -76,6 +83,8 @@ def generate_mock_events(num_orders=200, seed=RANDOM_SEED):
                 driver_id,
                 status,
                 amount,
+                zone,
+                category,
                 order_time.isoformat(timespec="seconds"),
                 estimated_delivery,
                 actual_delivery,
@@ -90,14 +99,16 @@ def ingest_data(seed=RANDOM_SEED):
     init_database()
     conn = duckdb.connect(DB_PATH)
 
-    conn.execute("DELETE FROM raw_orders")
-    orders = generate_mock_events(200, seed=seed)
+    conn.execute("DROP TABLE IF EXISTS raw_orders")
+    init_database()
+    
+    orders = generate_mock_events(500, seed=seed)
 
     print(f"Inserting {len(orders)} simulated orders into raw_orders...")
     conn.executemany(
         """
         INSERT OR REPLACE INTO raw_orders
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         orders,
     )

@@ -21,3 +21,11 @@ models:
       - name: created_at
         data_tests:
           - not_null
+      - name: zone
+        description: "Geographic delivery zone."
+        data_tests:
+          - not_null
+      - name: category
+        description: "Order category (e.g., Food, Pharmacy)."
+        data_tests:
+          - not_null

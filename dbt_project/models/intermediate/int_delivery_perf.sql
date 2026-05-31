@@ -9,6 +9,8 @@ select
     driver_id,
     status,
     amount,
+    zone,
+    category,
     created_at,
     estimated_delivery_minutes,
     actual_delivery_minutes,

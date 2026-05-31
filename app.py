@@ -395,6 +395,15 @@ with st.sidebar:
     show_critical_only = st.toggle(t["filters_critical"], value=False)
     
     st.divider()
+    st.markdown("## Segmentación" if language == "es" else "## Segmentation")
+    # Zone and category dropdowns
+    zones = ["All"] + sorted(df["zone"].dropna().unique().tolist())
+    categories = ["All"] + sorted(df["category"].dropna().unique().tolist())
+    
+    selected_zone = st.selectbox("Zona" if language == "es" else "Zone", zones)
+    selected_category = st.selectbox("Categoría" if language == "es" else "Category", categories)
+    
+    st.divider()
     if st.button("Simular nuevo lote" if language == "es" else "Simulate new batch", use_container_width=True, type="primary"):
         with st.spinner("Generando datos..." if language == "es" else "Generating data..."):
             subprocess.run(["python", "scripts/main.py", "--random-seed"], check=True)
@@ -419,6 +428,12 @@ filtered_df = filtered_df[
 
 if show_critical_only:
     filtered_df = filtered_df[filtered_df["is_severely_delayed"]]
+
+if selected_zone != "All":
+    filtered_df = filtered_df[filtered_df["zone"] == selected_zone]
+
+if selected_category != "All":
+    filtered_df = filtered_df[filtered_df["category"] == selected_category]
 
 total_deliveries = len(filtered_df)
 delayed_deliveries = int(filtered_df["is_severely_delayed"].sum())
