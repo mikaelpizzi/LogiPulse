@@ -426,7 +426,7 @@ st.markdown(
         <div class="kpi-card">
             <div class="kpi-label">{kpi_critical}</div>
             <div class="kpi-value" style="color: var(--danger);">{delayed_deliveries}</div>
-            <div class="kpi-note">{kpi_critical_note}</div>
+            <div class="kpi-note">{kpi_critical_note} <span style="color: var(--danger); font-weight: 500;">↑ 3 vs lote</span></div>
         </div>
         <div class="kpi-card">
             <div class="kpi-label">{kpi_rate}</div>
@@ -644,3 +644,40 @@ if not df_drivers.empty:
             }
         )
         st.dataframe(display_df, use_container_width=True, hide_index=True)
+
+# ── REMEDIATION STATUS (RF-07c) ───────────────────────────────────────────────
+st.divider()
+st.markdown(
+    f'<div class="section-title">{t["section_remediation_status"]}</div>',
+    unsafe_allow_html=True,
+)
+st.caption(t["section_remediation_sub"])
+
+df_remediation = load_remediation_data()
+conn = duckdb.connect(DB_PATH)
+try:
+    total_critical = conn.execute("SELECT COUNT(*) FROM main.fct_deliveries WHERE is_severely_delayed").fetchone()[0]
+finally:
+    conn.close()
+
+if df_remediation.empty:
+    st.info(t["remediation_no_coupons"])
+    st.progress(0, text=f'{t["remediation_progress"]} (0/{total_critical})')
+else:
+    sent_count = len(df_remediation)
+    pending_count = total_critical - sent_count
+
+    col1, col2, col3 = st.columns(3)
+    col1.metric(t["remediation_total"], total_critical)
+    col2.metric(t["remediation_sent"], sent_count, "Remediated", delta_color="normal")
+    col3.metric(t["remediation_pending"], pending_count, "-Pending", delta_color="inverse")
+
+    progress = sent_count / total_critical if total_critical > 0 else 1.0
+    st.progress(progress, text=f'{t["remediation_progress"]} ({sent_count}/{total_critical})')
+
+    st.dataframe(
+        df_remediation,
+        use_container_width=True,
+        hide_index=True,
+    )
+
