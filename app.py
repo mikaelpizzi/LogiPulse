@@ -528,3 +528,64 @@ else:
         use_container_width=True,
         hide_index=True,
     )
+
+# ── HOURLY DELAY PATTERN (RF-07a) ─────────────────────────────────────────────
+st.divider()
+st.markdown(
+    f'<div class="section-title">{t["section_hourly"]}</div>',
+    unsafe_allow_html=True,
+)
+st.caption(t["section_hourly_sub"])
+
+df_hourly = load_hourly_data()
+
+if not df_hourly.empty:
+    normal_count = df_hourly["total_orders"] - df_hourly["critical_count"]
+
+    fig_hourly = go.Figure()
+    fig_hourly.add_trace(go.Bar(
+        x=df_hourly["hour"],
+        y=normal_count,
+        name="On-time" if language == "en" else "A tiempo",
+        marker_color="#10b981",
+        hovertemplate="Hour %{x}h — %{y} on-time<extra></extra>"
+        if language == "en"
+        else "Hora %{x}h — %{y} a tiempo<extra></extra>",
+    ))
+    fig_hourly.add_trace(go.Bar(
+        x=df_hourly["hour"],
+        y=df_hourly["critical_count"],
+        name="Critical >15 min" if language == "en" else "Crítico >15 min",
+        marker_color="#ef4444",
+        hovertemplate="Hour %{x}h — %{y} critical<extra></extra>"
+        if language == "en"
+        else "Hora %{x}h — %{y} críticos<extra></extra>",
+    ))
+    for h0, h1 in [(12, 14), (19, 21)]:
+        fig_hourly.add_vrect(
+            x0=h0 - 0.5,
+            x1=h1 + 0.5,
+            fillcolor="rgba(251,191,36,0.13)",
+            layer="below",
+            line_width=0,
+            annotation_text=t["rush_hour_label"],
+            annotation_position="top left",
+            annotation_font_size=11,
+            annotation_font_color="#f59e0b",
+        )
+    fig_hourly.update_layout(
+        barmode="stack",
+        xaxis=dict(
+            title="Hour of day" if language == "en" else "Hora del día",
+            tickmode="linear",
+            tick0=0,
+            dtick=1,
+        ),
+        yaxis=dict(title="Orders" if language == "en" else "Pedidos"),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(family="Space Grotesk"),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        margin=dict(t=40, b=10),
+    )
+    st.plotly_chart(fig_hourly, use_container_width=True)
