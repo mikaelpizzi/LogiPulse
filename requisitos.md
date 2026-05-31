@@ -964,3 +964,50 @@ Debes hacer un commit cada vez que completes una pequeña "unidad de trabajo" qu
 *   Mensajes vagos como `"fix"`, `"cambios"`, `"update"` o `"un error corregido"`.
 *   Commits gigantescos donde modificaste 15 archivos de módulos totalmente diferentes al mismo tiempo.
 *   Dejar un commit a medias con código que no ejecuta, obligándote a hacer otro commit inmediatamente después llamado `"ahora sí funciona"`.
+
+---
+
+# Fase 2: Mejoras más allá del Spec Base (Prioridades de Impacto)
+
+Una vez completado el pipeline base, el sistema puede elevarse en tres frentes ordenados por impacto visual y profesional.
+
+## Prioridad 1 — El Dashboard debe contar una historia (RF-07)
+
+El dashboard base muestra datos pero no comunica valor de negocio. Se requiere extender `app.py` con tres nuevas secciones analíticas:
+
+### RF-07a — Patrón de Demoras por Hora del Día
+*   Agregar una función `load_hourly_data()` que consulte `fct_deliveries` agrupando por hora del día (`EXTRACT(HOUR FROM created_at)`).
+*   Renderizar un gráfico de barras apiladas (normal vs crítico) con las horas pico (12–14h y 19–21h) resaltadas visualmente con un rectángulo ámbar (`add_vrect`).
+*   **Objetivo:** Hacer visible la regla de negocio simulada — los retrasos se concentran en horas pico.
+
+### RF-07b — Ranking de Rendimiento de Motoristas
+*   Agregar una función `load_driver_data()` que agrupe `fct_deliveries` por `driver_id` calculando: total de entregas, demoras críticas, tasa crítica (%) y demora promedio.
+*   Mostrar un gráfico de barras horizontal con gradiente de color (verde → rojo según tasa crítica) y una tabla con el Top 5 peores motoristas.
+*   **Objetivo:** Proveer insight accionable — ¿qué motoristas necesitan intervención?
+
+### RF-07c — Panel de Estado de Remediación
+*   Agregar una función `load_remediation_data()` que consulte `sent_coupons` JOIN `fct_deliveries`.
+*   Mostrar tres métricas: incidencias críticas totales, cupones enviados, pendientes de remediación.
+*   Incluir una barra de progreso de remediación (`st.progress`) y una tabla de cupones enviados con sus códigos.
+*   **Objetivo:** Hacer visible el componente de Reverse ETL directamente en el dashboard — cerrar el ciclo de detección → remediación.
+
+---
+
+## Prioridad 2 — Hacer que se sienta "en vivo" (RF-08)
+
+El sistema opera en micro-lotes pero el dashboard no lo refleja. Se requiere un botón **"Simular nuevo lote"** en el sidebar que:
+1.  Llame a `scripts/main.py` con un seed diferente (tiempo actual como seed) para generar nuevas órdenes.
+2.  Ejecute `dbt run` en un subprocess.
+3.  Limpie el caché de Streamlit (`st.cache_data.clear()`) y refresque la vista.
+*   **Objetivo:** Transformar el dashboard estático en una demo interactiva que cualquier entrevistador puede operar.
+
+---
+
+## Prioridad 3 — Dataset más rico (RF-09)
+
+El simulador base genera 200 órdenes con 7 campos planos. Se requiere enriquecer `scripts/main.py`:
+*   Agregar campo `zone` (zonas geográficas: Centro, Norte, Sur, Este, Oeste).
+*   Agregar campo `category` (tipo de pedido: food, pharmacy, groceries).
+*   Aumentar a 500+ órdenes distribuidas en al menos 3 días de historia.
+*   Actualizar `stg_orders.sql`, `int_delivery_perf.sql`, `fct_deliveries.sql` y los `schema.yml` para incluir los nuevos campos.
+*   **Objetivo:** Abrir análisis de segmentación geográfica y por categoría en el dashboard.
