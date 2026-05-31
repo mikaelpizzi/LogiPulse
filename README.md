@@ -12,6 +12,10 @@ delays and automatically triggers compensation coupons for affected users — al
 
 ---
 
+## Architecture
+
+![LogiPulse architecture diagram](assets/diagram.png)
+
 ## How it works
 
 ```
@@ -97,7 +101,7 @@ LogiPulse/
 
 ### Requirements
 
-- Python **3.10** (dbt-core 1.7/1.8 is not compatible with Python 3.12+)
+- Python **≥ 3.10** (tested on 3.10 and 3.13)
 - Git
 
 ### Install
