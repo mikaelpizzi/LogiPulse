@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import UTC, datetime
 
 import duckdb
 import requests
@@ -68,7 +68,7 @@ def run_remediation():
             "order_id": order_id,
             "delay_minutes": int(delay_minutes),
             "coupon_code": coupon_code,
-            "processed_at": datetime.utcnow().isoformat(),
+            "processed_at": datetime.now(UTC).isoformat(),
         }
 
         success = True
@@ -95,7 +95,7 @@ def run_remediation():
                 INSERT INTO main.sent_coupons (order_id, sent_at, coupon_code)
                 VALUES (?, ?, ?)
                 """,
-                (order_id, datetime.utcnow().isoformat(), coupon_code),
+                (order_id, datetime.now(UTC).isoformat(), coupon_code),
             )
 
     conn.close()
