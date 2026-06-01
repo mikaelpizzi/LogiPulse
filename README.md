@@ -64,6 +64,13 @@ with rush-hour delays
 3. **`app.py`** — Streamlit dashboard with KPI cards, delay distribution histogram, and chronological scatter plot. Supports EN/ES and light/dark themes.
 4. **`scripts/remediate.py`** — Reverse ETL: queries `fct_deliveries`, generates a `DISCULPAXmin` coupon per delayed order, and sends an HTTP POST payload to a webhook endpoint. Uses a `sent_coupons` tracking table to guarantee idempotency.
 
+### 🔌 Extensibility: Connecting to External Data
+Currently, `scripts/main.py` generates synthetic delivery data. This was a deliberate architectural choice to ensure the project is **100% portable** and can be run locally by anyone without requiring AWS/GCP accounts, API keys, or database credentials.
+
+However, in a real-world enterprise scenario, taking data from external sources is trivial due to our modular design:
+1. **Swap the Generator:** Simply replace the `generate_delivery_data()` function in `main.py` with an API call (e.g., `requests.get()`) to a real logistics provider, or fetch a file from an AWS S3/Google Cloud bucket.
+2. **Zero Downstream Changes:** Once that script loads the external data into the `raw_orders` table, the rest of the pipeline (dbt transformations, the Streamlit dashboard, and the Reverse ETL coupon system) will function **exactly the same without any modifications**.
+
 ---
 
 ## Project layout
