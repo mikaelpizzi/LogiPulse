@@ -172,18 +172,10 @@ with st.sidebar:
         options=["en", "es"],
         format_func=lambda code: "English" if code == "en" else "Espanol",
     )
-    theme_choice = st.selectbox(
-        TRANSLATIONS[language]["theme_label"],
-        options=["light", "dark"],
-        format_func=lambda value: TRANSLATIONS[language]["theme_light"]
-        if value == "light"
-        else TRANSLATIONS[language]["theme_dark"],
-    )
 
 t = TRANSLATIONS[language]
 
-if theme_choice == "dark":
-    theme_css = """
+theme_css = """
     :root {
         --ink: #e2e8f0;
         --muted: #94a3b8;
@@ -207,31 +199,7 @@ if theme_choice == "dark":
     .kpi-card {
         border: 1px solid #1e293b;
     }
-    """
-else:
-    theme_css = """
-    :root {
-        --ink: #0f172a;
-        --muted: #64748b;
-        --accent: #0f766e;
-        --accent-soft: #99f6e4;
-        --danger: #b91c1c;
-        --danger-soft: #fecaca;
-        --panel: #ffffff;
-        --surface: #f8fafc;
-        --shadow: rgba(15, 23, 42, 0.08);
-    }
-
-    .stApp {
-        background: radial-gradient(circle at 10% 20%, #ecfeff 0%, #f8fafc 35%, #ffffff 100%);
-    }
-
-    .hero {
-        background: linear-gradient(120deg, #0f766e 0%, #115e59 55%, #134e4a 100%);
-    }
-    """
-
-chart_font_color = "#0f172a" if theme_choice == "light" else "#e2e8f0"
+"""
 
 st.markdown(
     f"""
@@ -618,7 +586,7 @@ with left_col:
     fig_hist.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(family="Space Grotesk", color=chart_font_color),
+        font=dict(family="Space Grotesk", color="#e2e8f0"),
         title_font_size=14,
         dragmode=False,
     )
@@ -643,7 +611,7 @@ with right_col:
     fig_scatter.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(family="Space Grotesk", color=chart_font_color),
+        font=dict(family="Space Grotesk", color="#e2e8f0"),
         title_font_size=14,
         dragmode=False,
     )
@@ -725,7 +693,7 @@ if not df_hourly.empty:
         yaxis=dict(title="Orders" if language == "en" else "Pedidos"),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(family="Space Grotesk", color=chart_font_color),
+        font=dict(family="Space Grotesk", color="#e2e8f0"),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         margin=dict(t=40, b=10),
         dragmode=False,
@@ -767,7 +735,7 @@ if not df_drivers.empty:
         fig_drivers.update_layout(
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(family="Space Grotesk", color=chart_font_color),
+            font=dict(family="Space Grotesk", color="#e2e8f0"),
             coloraxis_showscale=False,
             yaxis=dict(autorange="reversed"),
             xaxis=dict(range=[0, 110], title=t["driver_col_rate"]),
