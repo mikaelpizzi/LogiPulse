@@ -218,6 +218,17 @@ st.markdown(
         font-family: 'Space Grotesk', sans-serif;
     }}
 
+    /* Force text color to adapt to theme */
+    .stMarkdown p, .stMarkdown li, [data-testid="stExpanderDetails"] {{
+        color: var(--ink);
+    }}
+    
+    [data-testid="stExpander"] {{
+        background: var(--panel);
+        border-radius: 12px;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+    }}
+
     .hero {{
         padding: 24px 28px;
         border-radius: 20px;
