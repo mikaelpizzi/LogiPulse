@@ -421,13 +421,19 @@ with st.sidebar:
     
     st.divider()
     if st.button("Simular nuevo lote" if language == "es" else "Simulate new batch", use_container_width=True, type="primary"):
-        with st.spinner("Generando datos..." if language == "es" else "Generating data..."):
-            subprocess.run([sys.executable, "scripts/main.py", "--random-seed"], check=True)
-        with st.spinner("Ejecutando dbt run..." if language == "es" else "Running dbt..."):
-            # Use shell=True to easily pick up the venv's dbt.exe on Windows
-            subprocess.run(["dbt", "run", "--profiles-dir", "."], cwd="dbt_project", check=True, shell=True)
-        st.cache_data.clear()
-        st.rerun()
+        try:
+            with st.spinner("Generando datos..." if language == "es" else "Generating data..."):
+                subprocess.run([sys.executable, "scripts/main.py", "--random-seed"], check=True, capture_output=True, text=True)
+            with st.spinner("Ejecutando dbt run..." if language == "es" else "Running dbt..."):
+                subprocess.run(["dbt", "run", "--profiles-dir", "."], cwd="dbt_project", check=True, shell=True, capture_output=True, text=True)
+            st.cache_data.clear()
+            st.rerun()
+        except subprocess.CalledProcessError as e:
+            err_msg = (e.stdout or "") + (e.stderr or "")
+            if "lock" in err_msg.lower() or "io" in err_msg.lower() or "catalog" in err_msg.lower():
+                st.warning("🔄 " + ("Ya hay una simulación en curso. Por favor espera." if language == "es" else "A simulation is already running. Please wait."))
+            else:
+                st.error(f"❌ Error: {e.stderr or e.stdout}")
 
 filtered_df = df.copy()
 if isinstance(date_range, tuple) and len(date_range) == 2:
