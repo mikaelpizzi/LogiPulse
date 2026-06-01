@@ -75,7 +75,13 @@ TRANSLATIONS = {
         "metric_remediated": "Remediated",
         "metric_pending": "-Pending",
         "context_title": "📖 Project Context & Data Schema (Read First)",
-        "context_story": "**The Story:** This pipeline ingests raw logistic delivery events, models them using dbt to detect critical delays (>15 min), and automatically triggers a Reverse ETL script to send compensation coupons to affected customers. It covers the full lifecycle: Ingestion → Modeling → Observability → Activation.",
+        "context_story": """**The Story:** This pipeline ingests raw logistic delivery events, models them using dbt to detect critical delays (>15 min), and automatically triggers a Reverse ETL script to send compensation coupons to affected customers. It covers the full lifecycle: Ingestion → Modeling → Observability → Activation.
+
+**Data Engineering Specs (Under the Hood):**
+*   **Scale & Limits:** Powered by DuckDB (OLAP), this architecture can process millions of rows locally without breaking a sweat. The only limit is your machine's RAM.
+*   **Custom Data:** You can ingest your own data from any external API or CSV simply by updating `scripts/main.py`.
+*   **Data Contracts & Schemas:** Custom data *must* adhere to the expected schema (timestamps, user_id, zone, etc.). 
+*   **What if the schema breaks?** We have an ironclad Data Quality Contract. We implemented 28 `dbt tests` (unique, not_null, accepted_values). If bad data enters the system, the dbt pipeline instantly fails and alerts us *before* contaminating this dashboard.""",
         "context_data_title": "What does the raw data look like?",
         "context_data_desc": "Instead of simple numbers, the pipeline ingests complex JSON-like event logs containing timestamps, geospatial zones, driver IDs, and estimated vs. actual delivery times. Here is a live sample of the raw events loaded into DuckDB:",
     },
@@ -136,7 +142,13 @@ TRANSLATIONS = {
         "metric_remediated": "Remediados",
         "metric_pending": "-Pendientes",
         "context_title": "📖 Contexto del Proyecto y Datos (Leer Primero)",
-        "context_story": "**La Historia:** Este pipeline ingesta eventos crudos de entregas logísticas, los modela con dbt para detectar demoras críticas (>15 min) y dispara automáticamente un script de Reverse ETL para enviar cupones de compensación a los clientes. Cubre todo el ciclo: Ingesta → Modelado → Observabilidad → Activación.",
+        "context_story": """**La Historia:** Este pipeline ingesta eventos crudos de entregas logísticas, los modela con dbt para detectar demoras críticas (>15 min) y dispara automáticamente un script de Reverse ETL para enviar cupones de compensación a los clientes. Cubre todo el ciclo: Ingesta → Modelado → Observabilidad → Activación.
+
+**Especificaciones de Data Engineering:**
+*   **Escalabilidad y Límites:** Impulsado por DuckDB (motor OLAP columnar), puede procesar millones de filas localmente en segundos. El único límite real es tu memoria RAM.
+*   **Datos Custom:** Puedes inyectar tus propios datos desde cualquier API, CSV o JSON simplemente modificando `scripts/main.py`.
+*   **Contratos de Datos:** Los datos inyectados *deben* respetar el esquema base (timestamps, user_id, zone, etc.).
+*   **¿Y si llegan datos corruptos o sin esquema?** Tenemos un Contrato de Calidad de Datos (Data Contract). Implementamos 28 `dbt tests` (unique, not_null, accepted_values). Si llega data basura, el pipeline de dbt fallará inmediatamente y bloqueará el paso, evitando que el dashboard se contamine.""",
         "context_data_title": "¿Cómo son los datos crudos?",
         "context_data_desc": "En lugar de simples números, el pipeline procesa logs de eventos complejos que incluyen marcas de tiempo, zonas geoespaciales, IDs de motoristas y tiempos estimados vs. reales. Aquí tienes una muestra en vivo de los eventos crudos (raw) cargados en DuckDB:",
     },
