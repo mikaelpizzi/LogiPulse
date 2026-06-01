@@ -168,6 +168,21 @@ TRANSLATIONS = {
     },
 }
 
+VALUE_TRANSLATIONS = {
+    "es": {
+        "Food": "Comida",
+        "Groceries": "Supermercado",
+        "Pharmacy": "Farmacia",
+    },
+    "en": {
+        "Centro": "Center",
+        "Norte": "North",
+        "Sur": "South",
+        "Este": "East",
+        "Oeste": "West",
+    }
+}
+
 with st.sidebar:
     language = st.selectbox(
         "🌐 Language / Idioma",
@@ -477,8 +492,16 @@ with st.sidebar:
     zones = [t["filters_all"]] + sorted(df["zone"].dropna().unique().tolist())
     categories = [t["filters_all"]] + sorted(df["category"].dropna().unique().tolist())
     
-    selected_zone = st.selectbox(t["sidebar_zone"], zones)
-    selected_category = st.selectbox(t["sidebar_category"], categories)
+    selected_zone = st.selectbox(
+        t["sidebar_zone"], 
+        zones,
+        format_func=lambda x: VALUE_TRANSLATIONS.get(language, {}).get(x, x)
+    )
+    selected_category = st.selectbox(
+        t["sidebar_category"], 
+        categories,
+        format_func=lambda x: VALUE_TRANSLATIONS.get(language, {}).get(x, x)
+    )
     
     st.divider()
     if st.button(t["btn_simulate"], use_container_width=True, type="primary"):
