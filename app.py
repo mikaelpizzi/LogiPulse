@@ -514,7 +514,8 @@ with st.sidebar:
             with st.spinner(t["btn_simulating_data"]):
                 subprocess.run([sys.executable, "scripts/main.py", "--random-seed"], check=True, capture_output=True, text=True)
             with st.spinner(t["btn_simulating_dbt"]):
-                subprocess.run([sys.executable, "-m", "dbt", "run", "--profiles-dir", "."], cwd="dbt_project", check=True, capture_output=True, text=True)
+                dbt_executable = os.path.join(os.path.dirname(sys.executable), "dbt.exe" if os.name == "nt" else "dbt")
+                subprocess.run([dbt_executable, "run", "--profiles-dir", "."], cwd="dbt_project", check=True, capture_output=True, text=True)
             st.cache_data.clear()
             st.rerun()
         except subprocess.CalledProcessError as e:
