@@ -77,6 +77,12 @@ TRANSLATIONS = {
         "context_title": "📖 Project Context & Data Schema (Read First)",
         "context_story": """**The Story:** This pipeline ingests raw logistic delivery events, models them using dbt to detect critical delays (>15 min), and automatically triggers a Reverse ETL script to send compensation coupons to affected customers. It covers the full lifecycle: Ingestion → Modeling → Observability → Activation.
 
+**How to Read This Dashboard:**
+*   **KPIs (Top):** Quick snapshot of operational health. "Critical Delays" (red) track orders taking >15 extra minutes.
+*   **Hourly Pattern (Stacked Bar):** Proves delays aren't random. The red bars consistently spike during lunch (12-14h) and dinner (19-21h) rush hours (yellow highlights).
+*   **Driver Ranking:** Pinpoints underperforming drivers. e.g., if `drv_42` has a 60% critical rate (red bar), they require immediate intervention.
+*   **Remediation Status:** Our "Reverse ETL" in action. For every critical delay detected, the system automatically dispatches a `DISCULPAXmin` coupon to the user, proving the pipeline goes beyond analytics into automated action.
+
 **Data Engineering Specs (Under the Hood):**
 *   **Scale & Limits:** Powered by DuckDB (OLAP), this architecture can process millions of rows locally without breaking a sweat. The only limit is your machine's RAM.
 *   **Custom Data:** You can ingest your own data from any external API or CSV simply by updating `scripts/main.py`.
@@ -143,6 +149,12 @@ TRANSLATIONS = {
         "metric_pending": "-Pendientes",
         "context_title": "📖 Contexto del Proyecto y Datos (Leer Primero)",
         "context_story": """**La Historia:** Este pipeline ingesta eventos crudos de entregas logísticas, los modela con dbt para detectar demoras críticas (>15 min) y dispara automáticamente un script de Reverse ETL para enviar cupones de compensación a los clientes. Cubre todo el ciclo: Ingesta → Modelado → Observabilidad → Activación.
+
+**¿Cómo Leer Este Dashboard?**
+*   **KPIs (Arriba):** Resumen de salud operativa. "Demoras críticas" (rojo) indica pedidos que tardaron >15 minutos extra.
+*   **Patrón por Horas:** Demuestra que las fallas no son azar. Las barras rojas se disparan durante las Horas Pico (sombras amarillas) de almuerzo (12-14h) y cena (19-21h).
+*   **Ranking de Motoristas:** Identifica al instante quién falla. Si `drv_42` tiene 60% de tasa crítica (barra roja), requiere intervención urgente.
+*   **Estado de Remediación:** Nuestro "Reverse ETL" en acción. Por cada demora crítica detectada, el sistema envía un cupón `DISCULPAXmin` al cliente afectado automáticamente, demostrando que el pipeline no solo muestra datos, sino que toma acción.
 
 **Especificaciones de Data Engineering:**
 *   **Escalabilidad y Límites:** Impulsado por DuckDB (motor OLAP columnar), puede procesar millones de filas localmente en segundos. El único límite real es tu memoria RAM.
