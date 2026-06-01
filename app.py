@@ -26,6 +26,7 @@ TRANSLATIONS = {
         "filters_date": "Delivery window",
         "filters_delay": "Delay minutes range",
         "filters_critical": "Only critical delays",
+        "filters_all": "All",
         "kpi_completed": "Completed deliveries",
         "kpi_completed_note": "Filtered window",
         "kpi_critical": "Critical delays",
@@ -99,6 +100,7 @@ TRANSLATIONS = {
         "filters_date": "Ventana de entregas",
         "filters_delay": "Rango de minutos de demora",
         "filters_critical": "Solo demoras críticas",
+        "filters_all": "Todas",
         "kpi_completed": "Entregas completadas",
         "kpi_completed_note": "Ventana filtrada",
         "kpi_critical": "Demoras críticas",
@@ -168,9 +170,9 @@ TRANSLATIONS = {
 
 with st.sidebar:
     language = st.selectbox(
-        TRANSLATIONS["en"]["language_label"],
+        "🌐 Language / Idioma",
         options=["en", "es"],
-        format_func=lambda code: "English" if code == "en" else "Espanol",
+        format_func=lambda code: "English" if code == "en" else "Español",
     )
 
 t = TRANSLATIONS[language]
@@ -472,8 +474,8 @@ with st.sidebar:
     st.divider()
     st.markdown(f"## {t['sidebar_segmentation']}")
     # Zone and category dropdowns
-    zones = ["All"] + sorted(df["zone"].dropna().unique().tolist())
-    categories = ["All"] + sorted(df["category"].dropna().unique().tolist())
+    zones = [t["filters_all"]] + sorted(df["zone"].dropna().unique().tolist())
+    categories = [t["filters_all"]] + sorted(df["category"].dropna().unique().tolist())
     
     selected_zone = st.selectbox(t["sidebar_zone"], zones)
     selected_category = st.selectbox(t["sidebar_category"], categories)
@@ -510,10 +512,10 @@ filtered_df = filtered_df[
 if show_critical_only:
     filtered_df = filtered_df[filtered_df["is_severely_delayed"]]
 
-if selected_zone != "All":
+if selected_zone != t["filters_all"]:
     filtered_df = filtered_df[filtered_df["zone"] == selected_zone]
 
-if selected_category != "All":
+if selected_category != t["filters_all"]:
     filtered_df = filtered_df[filtered_df["category"] == selected_category]
 
 total_deliveries = len(filtered_df)
