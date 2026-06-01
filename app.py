@@ -63,6 +63,17 @@ TRANSLATIONS = {
         "driver_col_critical": "Critical delays",
         "driver_col_rate": "Critical rate (%)",
         "driver_col_avg_delay": "Avg delay (min)",
+        "sidebar_segmentation": "Segmentation",
+        "sidebar_zone": "Zone",
+        "sidebar_category": "Category",
+        "btn_simulate": "Simulate new batch",
+        "btn_simulating_data": "Generating data...",
+        "btn_simulating_dbt": "Running dbt...",
+        "sim_running_warning": "A simulation is already running. Please wait.",
+        "sim_running_error": "Error: {error}",
+        "delta_lote": "↑ 3 vs last batch",
+        "metric_remediated": "Remediated",
+        "metric_pending": "-Pending",
     },
     "es": {
         "hero_title": "Centro Operativo LogiPulse",
@@ -109,6 +120,17 @@ TRANSLATIONS = {
         "driver_col_critical": "Demoras cr\u00edticas",
         "driver_col_rate": "Tasa cr\u00edtica (%)",
         "driver_col_avg_delay": "Demora promedio (min)",
+        "sidebar_segmentation": "Segmentaci\u00f3n",
+        "sidebar_zone": "Zona",
+        "sidebar_category": "Categor\u00eda",
+        "btn_simulate": "Simular nuevo lote",
+        "btn_simulating_data": "Generando datos...",
+        "btn_simulating_dbt": "Ejecutando dbt run...",
+        "sim_running_warning": "Ya hay una simulaci\u00f3n en curso. Por favor espera.",
+        "sim_running_error": "Error: {error}",
+        "delta_lote": "↑ 3 vs lote anterior",
+        "metric_remediated": "Remediados",
+        "metric_pending": "-Pendientes",
     },
 }
 
@@ -170,6 +192,10 @@ else:
 
     .stApp {
         background: radial-gradient(circle at 10% 20%, #ecfeff 0%, #f8fafc 35%, #ffffff 100%);
+    }
+
+    .hero {
+        background: linear-gradient(120deg, #0f766e 0%, #115e59 55%, #134e4a 100%);
     }
     """
 
@@ -411,29 +437,29 @@ with st.sidebar:
     show_critical_only = st.toggle(t["filters_critical"], value=False)
     
     st.divider()
-    st.markdown("## Segmentación" if language == "es" else "## Segmentation")
+    st.markdown(f"## {t['sidebar_segmentation']}")
     # Zone and category dropdowns
     zones = ["All"] + sorted(df["zone"].dropna().unique().tolist())
     categories = ["All"] + sorted(df["category"].dropna().unique().tolist())
     
-    selected_zone = st.selectbox("Zona" if language == "es" else "Zone", zones)
-    selected_category = st.selectbox("Categoría" if language == "es" else "Category", categories)
+    selected_zone = st.selectbox(t["sidebar_zone"], zones)
+    selected_category = st.selectbox(t["sidebar_category"], categories)
     
     st.divider()
-    if st.button("Simular nuevo lote" if language == "es" else "Simulate new batch", use_container_width=True, type="primary"):
+    if st.button(t["btn_simulate"], use_container_width=True, type="primary"):
         try:
-            with st.spinner("Generando datos..." if language == "es" else "Generating data..."):
+            with st.spinner(t["btn_simulating_data"]):
                 subprocess.run([sys.executable, "scripts/main.py", "--random-seed"], check=True, capture_output=True, text=True)
-            with st.spinner("Ejecutando dbt run..." if language == "es" else "Running dbt..."):
+            with st.spinner(t["btn_simulating_dbt"]):
                 subprocess.run(["dbt", "run", "--profiles-dir", "."], cwd="dbt_project", check=True, shell=True, capture_output=True, text=True)
             st.cache_data.clear()
             st.rerun()
         except subprocess.CalledProcessError as e:
             err_msg = (e.stdout or "") + (e.stderr or "")
             if "lock" in err_msg.lower() or "io" in err_msg.lower() or "catalog" in err_msg.lower():
-                st.warning("🔄 " + ("Ya hay una simulación en curso. Por favor espera." if language == "es" else "A simulation is already running. Please wait."))
+                st.warning("🔄 " + t["sim_running_warning"])
             else:
-                st.error(f"❌ Error: {e.stderr or e.stdout}")
+                st.error("❌ " + t["sim_running_error"].format(error=e.stderr or e.stdout))
 
 filtered_df = df.copy()
 if isinstance(date_range, tuple) and len(date_range) == 2:
@@ -473,7 +499,7 @@ st.markdown(
         <div class="kpi-card">
             <div class="kpi-label">{kpi_critical}</div>
             <div class="kpi-value" style="color: var(--danger);">{delayed_deliveries}</div>
-            <div class="kpi-note">{kpi_critical_note} <span style="color: var(--danger); font-weight: 500;">↑ 3 vs lote</span></div>
+            <div class="kpi-note">{kpi_critical_note} <span style="color: var(--danger); font-weight: 500;">{delta_lote}</span></div>
         </div>
         <div class="kpi-card">
             <div class="kpi-label">{kpi_rate}</div>
@@ -499,6 +525,7 @@ st.markdown(
         kpi_rate_note=t["kpi_rate_note"],
         kpi_avg=t["kpi_avg"],
         kpi_avg_note=t["kpi_avg_note"],
+        delta_lote=t["delta_lote"],
     ),
     unsafe_allow_html=True,
 )
@@ -716,8 +743,8 @@ else:
 
     col1, col2, col3 = st.columns(3)
     col1.metric(t["remediation_total"], total_critical)
-    col2.metric(t["remediation_sent"], sent_count, "Remediated", delta_color="normal")
-    col3.metric(t["remediation_pending"], pending_count, "-Pending", delta_color="inverse")
+    col2.metric(t["remediation_sent"], sent_count, t["metric_remediated"], delta_color="normal")
+    col3.metric(t["remediation_pending"], pending_count, t["metric_pending"], delta_color="inverse")
 
     progress = sent_count / total_critical if total_critical > 0 else 1.0
     st.progress(progress, text=f'{t["remediation_progress"]} ({sent_count}/{total_critical})')
