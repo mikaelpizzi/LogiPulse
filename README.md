@@ -39,7 +39,7 @@ This project serves as a proof of concept for modern data engineering requiremen
 
 ```
 Python simulator                      DuckDB (local file)
-generates 200 orders  ──────────────► raw_orders table
+generates 500 orders  ──────────────► raw_orders table
 with rush-hour delays
                                               │
                                     dbt Core (3 SQL layers)
@@ -59,7 +59,7 @@ with rush-hour delays
 
 **Four components in sequence:**
 
-1. **`scripts/main.py`** — Generates 200 deterministic delivery events and loads them into DuckDB. Simulates realistic rush-hour delay spikes (12–14h and 19–21h).
+1. **`scripts/main.py`** — Generates 500 deterministic delivery events and loads them into DuckDB. Simulates realistic rush-hour delay spikes (12–14h and 19–21h).
 2. **`dbt_project/`** — Three SQL transformation layers: cleans raw data → calculates `delay_minutes` and `is_severely_delayed` → materializes the final fact table.
 3. **`app.py`** — Streamlit dashboard with KPI cards, delay distribution histogram, and chronological scatter plot. Supports EN/ES and light/dark themes.
 4. **`scripts/remediate.py`** — Reverse ETL: queries `fct_deliveries`, generates a `DISCULPAXmin` coupon per delayed order, and sends an HTTP POST payload to a webhook endpoint. Uses a `sent_coupons` tracking table to guarantee idempotency.
@@ -159,7 +159,7 @@ pip install -r requirements.txt
 python scripts/main.py
 ```
 
-Expected output: `Ingestion completed. Total rows in raw_orders: 200`
+Expected output: `Ingestion completed. Total rows in raw_orders: 500`
 
 ### Step 2 — Run dbt transformations and tests
 
@@ -172,11 +172,11 @@ Expected output: `Ingestion completed. Total rows in raw_orders: 200`
 cd dbt_project
 dbt debug --profiles-dir .    # verify connection
 dbt run   --profiles-dir .    # build stg → int → fct
-dbt test  --profiles-dir .    # run 9 data quality tests
+dbt test  --profiles-dir .    # run 28 data quality tests
 cd ..
 ```
 
-Expected output: `Done. PASS=3 WARN=0 ERROR=0 SKIP=0 TOTAL=3` and `Done. PASS=9 WARN=0 ERROR=0 SKIP=0 TOTAL=9`
+Expected output: `Done. PASS=3 WARN=0 ERROR=0 SKIP=0 TOTAL=3` and `Done. PASS=28 WARN=0 ERROR=0 SKIP=0 TOTAL=28`
 
 ### Step 3 — Launch the dashboard
 
@@ -229,10 +229,14 @@ A green badge at the top of this file confirms the pipeline is passing.
 - **KPI cards:** completed deliveries, critical delays, delay rate, average delay
 - **Delay distribution:** histogram with a dashed threshold line at 15 minutes
 - **Delay trend:** scatter plot by order time, colored by severity
+- **Hourly delay pattern:** stacked bar chart with rush-hour highlights (12–14h, 19–21h) proving delays are not random
+- **Driver performance ranking:** horizontal bar chart + table for the top-5 drivers with highest critical delay volume
+- **Remediation status:** real-time progress bar and metrics tracking coupons sent vs. pending incidents
 - **Incident table:** filterable list of critical orders for remediation
-- **Filters:** date window, delay range slider, critical-only toggle
-- **Bilingual UI:** English / Español
-- **Themes:** light and dark mode
+- **Simulate new batch:** one-click button to regenerate data + re-run dbt without leaving the dashboard
+- **Segmentation filters:** zone and category dropdowns, date window, delay range slider, critical-only toggle
+- **Bilingual UI:** English / Español (dynamic translation of data values)
+- **Project context expander:** embedded explanation of the pipeline story, data schema, and a live sample of raw events
 
 ---
 
