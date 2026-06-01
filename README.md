@@ -6,13 +6,32 @@
 ![DuckDB](https://img.shields.io/badge/DuckDB-1.1.3-yellow)
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.32-red?logo=streamlit)
 
-**LogiPulse** is a local Modern Data Stack pipeline that detects critical last-mile delivery
-delays and automatically triggers compensation coupons for affected users — all running
-100% on your machine, with no cloud accounts or paid services required.
+**LogiPulse** is an end-to-end local Modern Data Stack pipeline that detects critical last-mile delivery delays and automatically triggers compensation coupons for affected users.
+
+### 💡 Executive Summary (The "Elevator Pitch")
+LogiPulse is a demonstration of how to apply **software engineering best practices to data engineering**. In simple words: it ingests raw delivery events, uses `dbt` to clean and model the data to detect drivers with critical delays, visualizes the operational health in a real-time Streamlit dashboard, and runs a "Reverse ETL" script to automatically send compensation coupons to angry customers via an API.
+
+This project was explicitly designed to cover the entire lifecycle of a modern data product: **Ingestion → Modeling → Quality → Observability → Activation (Reverse ETL)**.
 
 ---
 
-## Architecture
+## 🎯 Alignment with Data Engineering Role
+
+This project serves as a proof of concept for modern data engineering requirements:
+
+| Job Requirement | How LogiPulse Solves It |
+| :--- | :--- |
+| **Data Modeling (dbt)** | Implements a robust 3-layer architecture (`staging`, `intermediate`, `marts`) strictly adhering to dbt best practices. |
+| **Ingestion Infrastructure** | `scripts/main.py` acts as a custom ingestion pipeline (similar to a Cloud Run job), generating and loading event data dynamically. |
+| **Quality & Observability** | Contains **28 dbt data tests** (unique, not_null, accepted_values, relationships) to detect anomalies and ensure pipeline health. |
+| **Documentation & Semantics** | Full documentation and semantic definitions within `schema.yml` files for every model and column. |
+| **Tech Stack & Tooling** | Advanced SQL (macros/CTEs), Python (Pandas/Subprocesses), DuckDB (as a local BigQuery substitute), and Streamlit (as a Hex substitute). |
+| **CI/CD & Automation** | Pipeline executes linearly with Git version control and atomic, semantic commit history. |
+| **Actionable Data (Hightouch)** | `scripts/remediate.py` mimics a Reverse ETL tool (like Hightouch or Clevertap) by pushing actionable data (coupons) back to operational systems via APIs, guaranteeing idempotency. |
+
+---
+
+## 🏗️ Architecture
 
 ![LogiPulse architecture diagram](assets/diagram.png)
 
