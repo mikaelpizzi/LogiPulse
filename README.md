@@ -68,7 +68,7 @@ with rush-hour delays
 Currently, `scripts/main.py` generates synthetic delivery data. This was a deliberate architectural choice to ensure the project is **100% portable** and can be run locally by anyone without requiring AWS/GCP accounts, API keys, or database credentials.
 
 However, in a real-world enterprise scenario, taking data from external sources is trivial due to our modular design:
-1. **Swap the Generator:** Simply replace the `generate_delivery_data()` function in `main.py` with an API call (e.g., `requests.get()`) to a real logistics provider, or fetch a file from an AWS S3/Google Cloud bucket.
+1. **Swap the Generator:** Simply replace the `generate_mock_events()` function in `main.py` with an API call (e.g., `requests.get()`) to a real logistics provider, or fetch a file from an AWS S3/Google Cloud bucket.
 2. **Zero Downstream Changes:** Once that script loads the external data into the `raw_orders` table, the rest of the pipeline (dbt transformations, the Streamlit dashboard, and the Reverse ETL coupon system) will function **exactly the same without any modifications**.
 
 ---
@@ -105,6 +105,8 @@ LogiPulse/
 | `driver_id` | VARCHAR | Driver identifier |
 | `status` | VARCHAR | `CREATED`, `ASSIGNED`, `PICKED_UP`, `DELIVERED`, `CANCELLED` |
 | `amount` | DOUBLE | Transaction amount |
+| `zone` | VARCHAR | Geographic delivery zone (e.g., `Centro`, `Norte`) |
+| `category` | VARCHAR | Order category (`Food`, `Pharmacy`, `Groceries`) |
 | `created_at` | VARCHAR | ISO 8601 timestamp |
 | `estimated_delivery_minutes` | INTEGER | Promised delivery window |
 | `actual_delivery_minutes` | INTEGER | Actual delivery time (NULL if not delivered) |
@@ -117,6 +119,8 @@ LogiPulse/
 | `user_id` | VARCHAR | |
 | `driver_id` | VARCHAR | |
 | `amount` | DOUBLE | |
+| `zone` | VARCHAR | Geographic delivery zone |
+| `category` | VARCHAR | Order category |
 | `created_at` | TIMESTAMP | |
 | `delay_minutes` | INTEGER | `actual - estimated` |
 | `is_severely_delayed` | BOOLEAN | `TRUE` if `delay_minutes > 15` |

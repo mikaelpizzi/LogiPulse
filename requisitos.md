@@ -81,8 +81,10 @@ Para evitar que tu IA genere campos aleatorios o nombres de columnas incoherente
 | `order_id` | `VARCHAR` | Identificador único del pedido | `'ord_77fa8f89'` |
 | `user_id` | `VARCHAR` | Identificador único del cliente | `'usr_412'` |
 | `driver_id` | `VARCHAR` | Identificador único del motorizado | `'drv_89'` |
-| `status` | `VARCHAR` | Estado del pedido (`CREATED`, `DELIVERED`, `CANCELLED`) | `'DELIVERED'` |
+| `status` | `VARCHAR` | Estado del pedido (`CREATED`, `ASSIGNED`, `PICKED_UP`, `DELIVERED`, `CANCELLED`) | `'DELIVERED'` |
 | `amount` | `DOUBLE` | Monto de la transacción de compra | `24.50` |
+| `zone` | `VARCHAR` | Zona geográfica de entrega | `'Centro'` |
+| `category` | `VARCHAR` | Categoría del pedido | `'Food'` |
 | `created_at` | `VARCHAR` | Fecha y hora de creación de la orden | `'2026-05-31T12:30:00'` |
 | `estimated_delivery_minutes` | `INTEGER` | Tiempo de entrega estimado prometido al usuario | `30` |
 | `actual_delivery_minutes` | `INTEGER` | Tiempo de entrega real tomado (puede ser `NULL` si no se entregó) | `48` |
@@ -117,6 +119,8 @@ Para evitar que tu IA genere campos aleatorios o nombres de columnas incoherente
     *   `user_id`
     *   `driver_id`
     *   `amount`
+    *   `zone`
+    *   `category`
     *   `created_at`
     *   `delay_minutes`
     *   `is_severely_delayed`
