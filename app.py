@@ -231,6 +231,8 @@ else:
     }
     """
 
+chart_font_color = "#0f172a" if theme_choice == "light" else "#e2e8f0"
+
 st.markdown(
     f"""
     <style>
@@ -616,7 +618,7 @@ with left_col:
     fig_hist.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(family="Space Grotesk", color="#0f172a"),
+        font=dict(family="Space Grotesk", color=chart_font_color),
         title_font_size=14,
         dragmode=False,
     )
@@ -641,7 +643,7 @@ with right_col:
     fig_scatter.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(family="Space Grotesk", color="#0f172a"),
+        font=dict(family="Space Grotesk", color=chart_font_color),
         title_font_size=14,
         dragmode=False,
     )
@@ -723,7 +725,7 @@ if not df_hourly.empty:
         yaxis=dict(title="Orders" if language == "en" else "Pedidos"),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(family="Space Grotesk"),
+        font=dict(family="Space Grotesk", color=chart_font_color),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         margin=dict(t=40, b=10),
         dragmode=False,
@@ -765,7 +767,7 @@ if not df_drivers.empty:
         fig_drivers.update_layout(
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(family="Space Grotesk"),
+            font=dict(family="Space Grotesk", color=chart_font_color),
             coloraxis_showscale=False,
             yaxis=dict(autorange="reversed"),
             xaxis=dict(range=[0, 110], title=t["driver_col_rate"]),
