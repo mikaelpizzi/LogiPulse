@@ -10,10 +10,11 @@ import streamlit as st
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(PROJECT_ROOT, "logipulse.duckdb")
+FAVICON_PATH = os.path.join(PROJECT_ROOT, "assets", "favicon.png")
 
 st.set_page_config(
     page_title="LogiPulse | Operational Dashboard",
-    page_icon="LP",
+    page_icon=FAVICON_PATH,
     layout="wide",
 )
 
