@@ -555,8 +555,9 @@ with left_col:
         plot_bgcolor="rgba(0,0,0,0)",
         font=dict(family="Space Grotesk", color="#0f172a"),
         title_font_size=14,
+        dragmode=False,
     )
-    st.plotly_chart(fig_hist, use_container_width=True)
+    st.plotly_chart(fig_hist, use_container_width=True, config={'displayModeBar': False})
 
 with right_col:
     st.markdown(
@@ -579,8 +580,9 @@ with right_col:
         plot_bgcolor="rgba(0,0,0,0)",
         font=dict(family="Space Grotesk", color="#0f172a"),
         title_font_size=14,
+        dragmode=False,
     )
-    st.plotly_chart(fig_scatter, use_container_width=True)
+    st.plotly_chart(fig_scatter, use_container_width=True, config={'displayModeBar': False})
 
 st.divider()
 st.markdown(
@@ -661,8 +663,9 @@ if not df_hourly.empty:
         font=dict(family="Space Grotesk"),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         margin=dict(t=40, b=10),
+        dragmode=False,
     )
-    st.plotly_chart(fig_hourly, use_container_width=True)
+    st.plotly_chart(fig_hourly, use_container_width=True, config={'displayModeBar': False})
 
 # ── DRIVER PERFORMANCE RANKING (RF-07b) ───────────────────────────────────────
 st.divider()
@@ -704,8 +707,9 @@ if not df_drivers.empty:
             yaxis=dict(autorange="reversed"),
             xaxis=dict(range=[0, 110], title=t["driver_col_rate"]),
             margin=dict(t=10, r=70, b=10),
+            dragmode=False,
         )
-        st.plotly_chart(fig_drivers, use_container_width=True)
+        st.plotly_chart(fig_drivers, use_container_width=True, config={'displayModeBar': False})
 
     with table_col:
         display_df = df_drivers.rename(
