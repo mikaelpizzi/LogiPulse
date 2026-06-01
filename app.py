@@ -188,6 +188,7 @@ with st.sidebar:
         "🌐 Language / Idioma",
         options=["en", "es"],
         format_func=lambda code: "English" if code == "en" else "Español",
+        key="lang_selector"
     )
 
 t = TRANSLATIONS[language]
@@ -476,6 +477,7 @@ with st.sidebar:
         value=(date_min, date_max),
         min_value=date_min,
         max_value=date_max,
+        key="date_filter"
     )
     min_delay, max_delay = int(df["delay_minutes"].min()), int(df["delay_minutes"].max())
     delay_range = st.slider(
@@ -483,8 +485,9 @@ with st.sidebar:
         min_value=min_delay,
         max_value=max_delay,
         value=(min_delay, max_delay),
+        key="delay_filter"
     )
-    show_critical_only = st.toggle(t["filters_critical"], value=False)
+    show_critical_only = st.toggle(t["filters_critical"], value=False, key="critical_filter")
     
     st.divider()
     st.markdown(f"## {t['sidebar_segmentation']}")
@@ -495,12 +498,14 @@ with st.sidebar:
     selected_zone = st.selectbox(
         t["sidebar_zone"], 
         zones,
-        format_func=lambda x: VALUE_TRANSLATIONS.get(language, {}).get(x, x)
+        format_func=lambda x: VALUE_TRANSLATIONS.get(language, {}).get(x, x),
+        key="zone_filter"
     )
     selected_category = st.selectbox(
         t["sidebar_category"], 
         categories,
-        format_func=lambda x: VALUE_TRANSLATIONS.get(language, {}).get(x, x)
+        format_func=lambda x: VALUE_TRANSLATIONS.get(language, {}).get(x, x),
+        key="category_filter"
     )
     
     st.divider()
