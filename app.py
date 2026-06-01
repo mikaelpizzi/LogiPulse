@@ -74,6 +74,10 @@ TRANSLATIONS = {
         "delta_lote": "↑ 3 vs last batch",
         "metric_remediated": "Remediated",
         "metric_pending": "-Pending",
+        "context_title": "📖 Project Context & Data Schema (Read First)",
+        "context_story": "**The Story:** This pipeline ingests raw logistic delivery events, models them using dbt to detect critical delays (>15 min), and automatically triggers a Reverse ETL script to send compensation coupons to affected customers. It covers the full lifecycle: Ingestion → Modeling → Observability → Activation.",
+        "context_data_title": "What does the raw data look like?",
+        "context_data_desc": "Instead of simple numbers, the pipeline ingests complex JSON-like event logs containing timestamps, geospatial zones, driver IDs, and estimated vs. actual delivery times. Here is a live sample of the raw events loaded into DuckDB:",
     },
     "es": {
         "hero_title": "Centro Operativo LogiPulse",
@@ -131,6 +135,10 @@ TRANSLATIONS = {
         "delta_lote": "↑ 3 vs lote anterior",
         "metric_remediated": "Remediados",
         "metric_pending": "-Pendientes",
+        "context_title": "📖 Contexto del Proyecto y Datos (Leer Primero)",
+        "context_story": "**La Historia:** Este pipeline ingesta eventos crudos de entregas logísticas, los modela con dbt para detectar demoras críticas (>15 min) y dispara automáticamente un script de Reverse ETL para enviar cupones de compensación a los clientes. Cubre todo el ciclo: Ingesta → Modelado → Observabilidad → Activación.",
+        "context_data_title": "¿Cómo son los datos crudos?",
+        "context_data_desc": "En lugar de simples números, el pipeline procesa logs de eventos complejos que incluyen marcas de tiempo, zonas geoespaciales, IDs de motoristas y tiempos estimados vs. reales. Aquí tienes una muestra en vivo de los eventos crudos (raw) cargados en DuckDB:",
     },
 }
 
@@ -387,6 +395,16 @@ def load_remediation_data():
     finally:
         conn.close()
 
+def load_raw_data_sample():
+    """Load a 5-row sample of the raw event data to show context."""
+    conn = get_duckdb_conn()
+    try:
+        tables = [r[0] for r in conn.execute("SHOW TABLES").fetchall()]
+        if "raw_orders" not in tables:
+            return pd.DataFrame()
+        return conn.execute("SELECT * FROM main.raw_orders LIMIT 5").fetchdf()
+    finally:
+        conn.close()
 
 if not os.path.exists(DB_PATH):
     st.error(t["error_db"].format(db_path=DB_PATH))
@@ -416,6 +434,16 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
+with st.expander(t["context_title"], expanded=False):
+    st.markdown(t["context_story"])
+    st.markdown(f"**{t['context_data_title']}** {t['context_data_desc']}")
+    
+    raw_sample = load_raw_data_sample()
+    if not raw_sample.empty:
+        st.dataframe(raw_sample, use_container_width=True, hide_index=True)
+    else:
+        st.info("No raw data found.")
 
 with st.sidebar:
     st.markdown(f"## {t['filters_title']}")
